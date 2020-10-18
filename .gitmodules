@@ -1,0 +1,4 @@
+[submodule "Distributed_Systems_Lab_1"]
+	path = Distributed_Systems_Lab_1
+	branch = master
+	url = https://github.com/vadimdoga/Distributed_Systems_Lab_1
