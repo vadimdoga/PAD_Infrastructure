@@ -2,3 +2,6 @@
 	path = Distributed_Systems_Lab_1
 	branch = master
 	url = https://github.com/vadimdoga/Distributed_Systems_Lab_1
+[submodule "PAD_Lab1"]
+	path = PAD_Lab1
+	url = https://github.com/EliodorPopov/PAD_Lab1
