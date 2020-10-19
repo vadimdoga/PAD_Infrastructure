@@ -5,3 +5,7 @@
 [submodule "PAD_Lab1"]
 	path = PAD_Lab1
 	url = https://github.com/EliodorPopov/PAD_Lab1
+[submodule "PAD"]
+	path = PAD
+	url = https://github.com/FilipAdrian/PAD
+	branch = develop
