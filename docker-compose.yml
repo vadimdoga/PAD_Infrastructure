@@ -17,6 +17,7 @@ services:
       GATEWAY_ADDR: https://httpbin.org/post
       IP: 0.0.0.0
       PORT: 8080
+      BASE_PATH: "/api/products"
       MongoDbURI: mongodb+srv://admin:admin@cluster0.cnciz.mongodb.net/products_service?retryWrites=true&w=majority
 
   user-api:
