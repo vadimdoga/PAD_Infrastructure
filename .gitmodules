@@ -12,3 +12,4 @@
 [submodule "PAD_Orders_Service"]
 	path = PAD_Orders_Service
 	url = https://github.com/vadimdoga/PAD_Orders_Service.git
+	branch = develop
