@@ -98,6 +98,7 @@ services:
             dockerfile: ./PAD/Dockerfile
         container_name: user_service
         depends_on:
+            - rabbitMQ
             - postgres_db
         networks:
             - default
@@ -119,10 +120,20 @@ services:
             DEFAULT_RATE_LIMIT: "5 per minute"
             DEFAULT_CAPACITY: 10
             GATEWAY_URL: "https://httpbin.org/post"
+        #rabbitmq properties
+            RABBITMQ_HOST: rabbitMQ
+            RABBITMQ_PORT: 5672
+            RABBITMQ_USER: guest
+            RABBITMQ_PASSWORD: guest
+            ORDER_Q_NAME: ORDER_DELIVERY_EVENT
+            PRODUCT_Q_NAME: PRODUCTS_CHECKING_EVENT
+            PRODUCT_COMPENSATION_Q_NAME: COMPENSATION_PRODUCTS_CHECKING_EVENT
+            ORDER_COMPENSATION_Q_NAME: COMPENSATION_ORDER_CHECKING_EVENT
 
 
 volumes:
+    rabbitMQ_volume:
     pgdata:
     orders_mongo_db_v:
     products_mongo_db_v:
-    rabbitMQ_volume:
+
