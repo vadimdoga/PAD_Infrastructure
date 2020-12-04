@@ -1,66 +1,128 @@
 version: "2.3"
 
 services:
-  product_service:
-    image: product_service
-    build:
-      context: .
-      dockerfile: ./Distributed_Systems_Lab_1/Dockerfile
-    ports:
-      - "0.0.0.0:8080:8080"
-    volumes:
-      - ".:/product_service"
-    environment:
-      HIGH_LIMIT: 5
-      LOW_LIMIT: 20
-      TIMEOUT: 1s
-      GATEWAY_ADDR: https://httpbin.org/post
-      IP: 0.0.0.0
-      PORT: 8080
-      BASE_PATH: "/api/products"
-      MongoDbURI: mongodb+srv://admin:admin@cluster0.cnciz.mongodb.net/products_service?retryWrites=true&w=majority
+    rabbitMQ:
+        image: rabbitmq:3-management
+        container_name: RMQ
+        ports:
+            - "15672:15672"
+        volumes:
+            - rabbitMQ_volume:/var/lib/rabbitmq
 
-  user-api:
-    build:
-      context: .
-      dockerfile: ./PAD/Dockerfile
-    depends_on:
-      - postgres_db
-    networks:
-      - default
-    ports:
-      - "0.0.0.0:8081:8081"
-    volumes:
-      - .:/user_service
-    environment:
-    #DB Config
-      DB_HOST: postgres_db
-      DB_PORT: 5432
-      DB_USERNAME: postgres
-      DB_PASSWORD: postgres
-      DB_SCHEMA: postgres
-    #api properties
-      API_PORT: 8081
-      API_HOST: 0.0.0.0
-      API_BASE_PATH: "/api/"
-      DEFAULT_RATE_LIMIT: "5 per minute"
-      DEFAULT_CAPACITY: 10
-      GATEWAY_URL: "https://httpbin.org/post"
+    orders_mongo_db:
+        image: mongo
+        container_name: orders_mongo
+        environment:
+            - MONGO_INITDB_DATABASE=orders_service
+        volumes:
+            - orders_mongo_db_v:/data/db
 
-  postgres_db:
-    image: postgres:latest
-    networks:
-      - default
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    environment:
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "postgres"
-      POSTGRES_DB: "postgres"
+    products_mongo_db:
+        image: mongo
+        container_name: products_mongo
+        environment:
+            - MONGO_INITDB_DATABASE=products_service
+        volumes:
+            - products_mongo_db_v:/data/db
 
-    restart: on-failure
+    postgres_db:
+        image: postgres:latest
+        container_name: postgre_db
+        networks:
+            - default
+        ports:
+            - "5432:5432"
+        volumes:
+            - pgdata:/var/lib/postgresql/data
+        environment:
+            POSTGRES_USER: "postgres"
+            POSTGRES_PASSWORD: "postgres"
+            POSTGRES_DB: "postgres"
+        restart: on-failure
+
+    products_service:
+        image: product_service
+        container_name: products_service
+        build:
+            context: ./PAD_Products_Service
+            dockerfile: Dockerfile
+        restart: always
+        links:
+            - products_mongo_db
+        ports:
+            - "0.0.0.0:8080:8080"
+        environment:
+            APP_ENVIRONMENT: production
+            HIGH_LIMIT: 5
+            LOW_LIMIT: 20
+            TIMEOUT: 1200
+            GATEWAY_ADDR: https://httpbin.org/post
+            HOST: 0.0.0.0
+            PORT: 8080
+            MQ_PORT: 5672
+            MQ_ADDRESS: rabbitMQ
+            MONGODB_HOST: products_mongo_db
+            MONGODB_PORT: 27017
+            MONGODB_DB: products_service
+        depends_on:
+            - rabbitMQ
+            - products_mongo_db
+
+    orders_service:
+        image: orders_service
+        container_name: orders_service
+        build:
+            context: ./PAD_Orders_Service
+            dockerfile: Dockerfile
+        links:
+            - orders_mongo_db
+        ports:
+            - "8082:8082"
+        environment:
+            MONGODB_HOST: orders_mongo_db
+            MONGODB_PORT: 27017
+            MONGODB_DB: orders_service
+            MQ_HOST: rabbitMQ
+            HOST: 0.0.0.0
+            PORT: 8082
+        entrypoint: ["/bin/bash", "-c"]
+        command: ["python main.py"]
+        restart: always
+        depends_on:
+            - orders_mongo_db
+            - rabbitMQ
+
+    user-api:
+        build:
+            context: .
+            dockerfile: ./PAD/Dockerfile
+        container_name: user_service
+        depends_on:
+            - postgres_db
+        networks:
+            - default
+        ports:
+            - "0.0.0.0:8081:8081"
+        volumes:
+            - .:/user_service
+        environment:
+        #DB Config
+            DB_HOST: postgres_db
+            DB_PORT: 5432
+            DB_USERNAME: postgres
+            DB_PASSWORD: postgres
+            DB_SCHEMA: postgres
+        #api properties
+            API_PORT: 8081
+            API_HOST: 0.0.0.0
+            API_BASE_PATH: "/api/"
+            DEFAULT_RATE_LIMIT: "5 per minute"
+            DEFAULT_CAPACITY: 10
+            GATEWAY_URL: "https://httpbin.org/post"
+
 
 volumes:
-  pgdata:
+    pgdata:
+    orders_mongo_db_v:
+    products_mongo_db_v:
+    rabbitMQ_volume:
