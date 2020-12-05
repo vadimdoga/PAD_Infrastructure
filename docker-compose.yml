@@ -8,7 +8,11 @@ services:
             - "15672:15672"
         volumes:
             - rabbitMQ_volume:/var/lib/rabbitmq
-
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:15672"]
+            interval: 30s
+            timeout: 10s
+            retries: 5
     orders_mongo_db:
         image: mongo
         container_name: orders_mongo
@@ -97,6 +101,7 @@ services:
             context: .
             dockerfile: ./PAD/Dockerfile
         container_name: user_service
+        restart: always
         depends_on:
             - rabbitMQ
             - postgres_db
