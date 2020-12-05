@@ -99,14 +99,12 @@ services:
     user-api:
         build:
             context: .
-            dockerfile: ./PAD/Dockerfile
+            dockerfile: ./PAD_User_Service/Dockerfile
         container_name: user_service
         restart: always
         depends_on:
             - rabbitMQ
             - postgres_db
-        networks:
-            - default
         ports:
             - "0.0.0.0:8081:8081"
         volumes:
